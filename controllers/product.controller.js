@@ -1,13 +1,13 @@
-const mongoose = require("mongoose");
-const Product = require("../models/Product.model");
-const SubCategory = require("../models/SubCategory.model");
-const Category = require("../models/Category.model");
-const ApiError = require("../utils/apiError.util");
+const mongoose = require('mongoose');
+const Product = require('../models/Product.model');
+const SubCategory = require('../models/SubCategory.model');
+const Category = require('../models/Category.model');
+const ApiError = require('../utils/apiError.util');
 
 const parsePagination = (query) => {
   const page = Math.max(parseInt(query.page) || 1, 1);
   const limit = Math.max(parseInt(query.limit) || 10, 1);
-  const sort = query.sort || "-createdAt";
+  const sort = query.sort || '-createdAt';
   return { page, limit, sort, skip: (page - 1) * limit };
 };
 
@@ -24,7 +24,7 @@ exports.createProduct = async (req, res, next) => {
     ) {
       return next(
         new ApiError(
-          "name, price, stock, category and subCategory are required",
+          'name, price, stock, category and subCategory are required',
           400,
         ),
       );
@@ -33,14 +33,14 @@ exports.createProduct = async (req, res, next) => {
       !mongoose.Types.ObjectId.isValid(category) ||
       !mongoose.Types.ObjectId.isValid(subCategory)
     ) {
-      return next(new ApiError("Invalid category or subCategory id", 400));
+      return next(new ApiError('Invalid category or subCategory id', 400));
     }
     const cat = await Category.findById(category);
     const subCat = await SubCategory.findById(subCategory);
-    if (!cat) return next(new ApiError("Category not found", 404));
-    if (!subCat) return next(new ApiError("SubCategory not found", 404));
+    if (!cat) return next(new ApiError('Category not found', 404));
+    if (!subCat) return next(new ApiError('SubCategory not found', 404));
     if (String(subCat.category) !== String(cat._id))
-      return next(new ApiError("subCategory does not belong to category", 400));
+      return next(new ApiError('subCategory does not belong to category', 400));
     const product = await Product.create({
       name: name.trim(),
       price,
@@ -59,7 +59,7 @@ exports.createProduct = async (req, res, next) => {
       { _id: category },
       { $addToSet: { products: product._id } },
     );
-    res.status(201).json({ status: "success", data: product });
+    res.status(201).json({ status: 'success', data: product });
   } catch (err) {
     next(err);
   }
@@ -84,12 +84,12 @@ exports.getProducts = async (req, res, next) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate("category", "name")
-      .populate("subCategory", "name");
+      .populate('category', 'name')
+      .populate('subCategory', 'name');
     res
       .status(200)
       .json({
-        status: "success",
+        status: 'success',
         results: data.length,
         pagination: { page, limit, total },
         data,
@@ -103,12 +103,12 @@ exports.getProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return next(new ApiError("Invalid product id", 400));
+      return next(new ApiError('Invalid product id', 400));
     const data = await Product.findById(id)
-      .populate("category", "name")
-      .populate("subCategory", "name");
-    if (!data) return next(new ApiError("Product not found", 404));
-    res.status(200).json({ status: "success", data });
+      .populate('category', 'name')
+      .populate('subCategory', 'name');
+    if (!data) return next(new ApiError('Product not found', 404));
+    res.status(200).json({ status: 'success', data });
   } catch (err) {
     next(err);
   }
@@ -118,9 +118,9 @@ exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return next(new ApiError("Invalid product id", 400));
+      return next(new ApiError('Invalid product id', 400));
     const current = await Product.findById(id);
-    if (!current) return next(new ApiError("Product not found", 404));
+    if (!current) return next(new ApiError('Product not found', 404));
 
     if (req.body.category || req.body.subCategory) {
       const newCategoryId = req.body.category
@@ -133,15 +133,15 @@ exports.updateProduct = async (req, res, next) => {
         !mongoose.Types.ObjectId.isValid(newCategoryId) ||
         !mongoose.Types.ObjectId.isValid(newSubCategoryId)
       ) {
-        return next(new ApiError("Invalid category or subCategory id", 400));
+        return next(new ApiError('Invalid category or subCategory id', 400));
       }
       const cat = await Category.findById(newCategoryId);
       const subCat = await SubCategory.findById(newSubCategoryId);
-      if (!cat) return next(new ApiError("Category not found", 404));
-      if (!subCat) return next(new ApiError("SubCategory not found", 404));
+      if (!cat) return next(new ApiError('Category not found', 404));
+      if (!subCat) return next(new ApiError('SubCategory not found', 404));
       if (String(subCat.category) !== String(cat._id))
         return next(
-          new ApiError("subCategory does not belong to category", 400),
+          new ApiError('subCategory does not belong to category', 400),
         );
       if (String(current.subCategory) !== String(newSubCategoryId)) {
         await SubCategory.updateOne(
@@ -170,7 +170,7 @@ exports.updateProduct = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
-    res.status(200).json({ status: "success", data });
+    res.status(200).json({ status: 'success', data });
   } catch (err) {
     next(err);
   }
@@ -180,9 +180,9 @@ exports.deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return next(new ApiError("Invalid product id", 400));
+      return next(new ApiError('Invalid product id', 400));
     const product = await Product.findById(id);
-    if (!product) return next(new ApiError("Product not found", 404));
+    if (!product) return next(new ApiError('Product not found', 404));
     await SubCategory.updateOne(
       { _id: product.subCategory },
       { $pull: { products: product._id } },
@@ -193,7 +193,7 @@ exports.deleteProduct = async (req, res, next) => {
       { $pull: { products: product._id } },
     );
     await Product.findByIdAndDelete(id);
-    res.status(200).json({ status: "success", message: "Product deleted" });
+    res.status(200).json({ status: 'success', message: 'Product deleted' });
   } catch (err) {
     next(err);
   }

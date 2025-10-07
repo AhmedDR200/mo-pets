@@ -1,15 +1,15 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const figlet = require("figlet");
-const colors = require("colors");
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const figlet = require('figlet');
+const colors = require('colors');
 dotenv.config();
 
 const dbConnection = async () => {
   try {
     await mongoose.connect(process.env.DB_URI);
-    figlet("DB Connected!", (err, data) => {
+    figlet('DB Connected!', (err, data) => {
       if (err) {
-        console.error("Figlet error:", err);
+        console.error('Figlet error:', err);
         return;
       }
       console.log(data.green);
