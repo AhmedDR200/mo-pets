@@ -1,0 +1,141 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "MO API",
+    "version": "1.0.0",
+    "description": "API documentation for Categories, SubCategories, and Products"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}",
+      "variables": {
+        "port": {
+          "default": "3000"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Server is running"
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "summary": "List categories",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "default": "-createdAt" } }
+        ],
+        "responses": { "200": { "description": "Success" } }
+      },
+      "post": {
+        "summary": "Create category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CategoryCreate" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created" }, "400": { "description": "Bad Request" }, "409": { "description": "Conflict" } }
+      }
+    },
+    "/api/categories/{id}": {
+      "get": { "summary": "Get category", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Success" }, "404": { "description": "Not Found" } } },
+      "put": { "summary": "Update category", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryUpdate" } } } }, "responses": { "200": { "description": "Updated" }, "404": { "description": "Not Found" } } },
+      "delete": { "summary": "Delete category", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not Found" } } }
+    },
+    "/api/subcategories": {
+      "get": { "summary": "List subcategories", "parameters": [ { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }, { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }, { "name": "category", "in": "query", "schema": { "type": "string" } } ], "responses": { "200": { "description": "Success" } } },
+      "post": { "summary": "Create subcategory", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubCategoryCreate" } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Bad Request" }, "409": { "description": "Conflict" } } }
+    },
+    "/api/subcategories/{id}": {
+      "get": { "summary": "Get subcategory", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Success" }, "404": { "description": "Not Found" } } },
+      "put": { "summary": "Update subcategory", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubCategoryUpdate" } } } }, "responses": { "200": { "description": "Updated" }, "404": { "description": "Not Found" } } },
+      "delete": { "summary": "Delete subcategory", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not Found" } } }
+    },
+    "/api/products": {
+      "get": { "summary": "List products", "parameters": [ { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }, { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }, { "name": "category", "in": "query", "schema": { "type": "string" } }, { "name": "subCategory", "in": "query", "schema": { "type": "string" } } ], "responses": { "200": { "description": "Success" } } },
+      "post": { "summary": "Create product", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductCreate" } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Bad Request" }, "409": { "description": "Conflict" } } }
+    },
+    "/api/products/{id}": {
+      "get": { "summary": "Get product", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Success" }, "404": { "description": "Not Found" } } },
+      "put": { "summary": "Update product", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductUpdate" } } } }, "responses": { "200": { "description": "Updated" }, "404": { "description": "Not Found" } } },
+      "delete": { "summary": "Delete product", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not Found" } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategoryCreate": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" }
+        }
+      },
+      "CategoryUpdate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" }
+        }
+      },
+      "SubCategoryCreate": {
+        "type": "object",
+        "required": ["name", "description", "category"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": { "type": "string" }
+        }
+      },
+      "SubCategoryUpdate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": { "type": "string" }
+        }
+      },
+      "ProductCreate": {
+        "type": "object",
+        "required": ["name", "price", "stock", "category", "subCategory"],
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number", "minimum": 0 },
+          "stock": { "type": "integer", "minimum": 0 },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": { "type": "string" },
+          "subCategory": { "type": "string" }
+        }
+      },
+      "ProductUpdate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number", "minimum": 0 },
+          "stock": { "type": "integer", "minimum": 0 },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": { "type": "string" },
+          "subCategory": { "type": "string" }
+        }
+      }
+    }
+  }
+}

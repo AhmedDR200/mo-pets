@@ -7,6 +7,8 @@ const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 const dotenv = require("dotenv");
 const figlet = require("figlet");
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 // Main Route
 const mountRoutes = require("./routes/main.routes");
@@ -50,6 +52,9 @@ app.use("/", limiter);
 
 // Routes
 mountRoutes(app);
+
+// Swagger UI
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // 404 Error Handling Middleware
 app.all("*", (req, res, next) => {
