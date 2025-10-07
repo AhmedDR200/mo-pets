@@ -53,6 +53,13 @@ app.use('/', limiter);
 // Routes
 mountRoutes(app);
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Welcome from the Backend 👀',
+  });
+});
+
 // Swagger UI
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get('/swagger.json', (req, res) => {
