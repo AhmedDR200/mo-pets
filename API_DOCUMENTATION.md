@@ -3,6 +3,7 @@
 Base URL: `https://mo-pets.vercel.app`
 
 ## Table of Contents
+
 - [Health Check](#health-check)
 - [Categories](#categories)
 - [SubCategories](#subcategories)
@@ -13,11 +14,13 @@ Base URL: `https://mo-pets.vercel.app`
 ## Health Check
 
 ### Get Server Health
+
 **Endpoint:** `GET /api/health`
 
 **Description:** Check if the server is running
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -31,6 +34,7 @@ Base URL: `https://mo-pets.vercel.app`
 ## Categories
 
 ### Get All Categories
+
 **Endpoint:** `GET /api/categories`
 
 **Query Parameters:**
@@ -41,11 +45,13 @@ Base URL: `https://mo-pets.vercel.app`
 | `sort` | string | `-createdAt` | Sort field (prefix with `-` for descending) |
 
 **Example Request:**
+
 ```
 GET /api/categories?page=1&limit=10&sort=-createdAt
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -73,6 +79,7 @@ GET /api/categories?page=1&limit=10&sort=-createdAt
 ---
 
 ### Get Single Category
+
 **Endpoint:** `GET /api/categories/:id`
 
 **URL Parameters:**
@@ -81,11 +88,13 @@ GET /api/categories?page=1&limit=10&sort=-createdAt
 | `id` | string | Yes | Category ID (MongoDB ObjectId) |
 
 **Example Request:**
+
 ```
 GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -105,6 +114,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ---
 
 ### Create Category
+
 **Endpoint:** `POST /api/categories`
 
 **Request Body:**
@@ -115,6 +125,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 | `image` | string | No | Category image URL |
 
 **Example Request:**
+
 ```json
 {
   "name": "Dogs",
@@ -124,6 +135,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ```
 
 **Response:** (201 Created)
+
 ```json
 {
   "status": "success",
@@ -143,6 +155,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ---
 
 ### Update Category
+
 **Endpoint:** `PUT /api/categories/:id`
 
 **URL Parameters:**
@@ -158,6 +171,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 | `image` | string | Category image URL |
 
 **Example Request:**
+
 ```json
 {
   "name": "Cats",
@@ -166,6 +180,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -185,6 +200,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ---
 
 ### Delete Category
+
 **Endpoint:** `DELETE /api/categories/:id`
 
 **URL Parameters:**
@@ -195,6 +211,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 **Note:** Deleting a category will also delete all associated subcategories and products.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -207,6 +224,7 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 ## SubCategories
 
 ### Get All SubCategories
+
 **Endpoint:** `GET /api/subcategories`
 
 **Query Parameters:**
@@ -218,11 +236,13 @@ GET /api/categories/60d5ec49f1b2c72b8c8e4b5a
 | `category` | string | - | Filter by category ID |
 
 **Example Request:**
+
 ```
 GET /api/subcategories?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -253,6 +273,7 @@ GET /api/subcategories?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a
 ---
 
 ### Get Single SubCategory
+
 **Endpoint:** `GET /api/subcategories/:id`
 
 **URL Parameters:**
@@ -261,11 +282,13 @@ GET /api/subcategories?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a
 | `id` | string | Yes | SubCategory ID (MongoDB ObjectId) |
 
 **Example Request:**
+
 ```
 GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -288,6 +311,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ---
 
 ### Create SubCategory
+
 **Endpoint:** `POST /api/subcategories`
 
 **Request Body:**
@@ -299,6 +323,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 | `image` | string | No | SubCategory image URL |
 
 **Example Request:**
+
 ```json
 {
   "name": "Food",
@@ -309,6 +334,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ```
 
 **Response:** (201 Created)
+
 ```json
 {
   "status": "success",
@@ -328,6 +354,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ---
 
 ### Update SubCategory
+
 **Endpoint:** `PUT /api/subcategories/:id`
 
 **URL Parameters:**
@@ -346,6 +373,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 **Note:** Changing the category will also move all associated products to the new category.
 
 **Example Request:**
+
 ```json
 {
   "name": "Premium Food",
@@ -354,6 +382,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -373,6 +402,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ---
 
 ### Delete SubCategory
+
 **Endpoint:** `DELETE /api/subcategories/:id`
 
 **URL Parameters:**
@@ -383,6 +413,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 **Note:** Deleting a subcategory will also delete all associated products.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -395,6 +426,7 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 ## Products
 
 ### Get All Products
+
 **Endpoint:** `GET /api/products`
 
 **Query Parameters:**
@@ -407,11 +439,13 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 | `subCategory` | string | - | Filter by subcategory ID |
 
 **Example Request:**
+
 ```
 GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&sort=-price
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -447,6 +481,7 @@ GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&sort=-price
 ---
 
 ### Get Single Product
+
 **Endpoint:** `GET /api/products/:id`
 
 **URL Parameters:**
@@ -455,11 +490,13 @@ GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&sort=-price
 | `id` | string | Yes | Product ID (MongoDB ObjectId) |
 
 **Example Request:**
+
 ```
 GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -487,6 +524,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ---
 
 ### Create Product
+
 **Endpoint:** `POST /api/products`
 
 **Request Body:**
@@ -503,6 +541,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 **Note:** The subcategory must belong to the specified category.
 
 **Example Request:**
+
 ```json
 {
   "name": "Premium Dog Food 5kg",
@@ -516,6 +555,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ```
 
 **Response:** (201 Created)
+
 ```json
 {
   "status": "success",
@@ -537,6 +577,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ---
 
 ### Update Product
+
 **Endpoint:** `PUT /api/products/:id`
 
 **URL Parameters:**
@@ -558,6 +599,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 **Note:** If updating category/subcategory, the subcategory must belong to the specified category.
 
 **Example Request:**
+
 ```json
 {
   "price": 24.99,
@@ -566,6 +608,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -587,6 +630,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ---
 
 ### Delete Product
+
 **Endpoint:** `DELETE /api/products/:id`
 
 **URL Parameters:**
@@ -595,6 +639,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 | `id` | string | Yes | Product ID (MongoDB ObjectId) |
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -609,6 +654,7 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 All endpoints may return the following error responses:
 
 ### 400 Bad Request
+
 ```json
 {
   "status": "error",
@@ -617,6 +663,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "status": "error",
@@ -625,6 +672,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 409 Conflict
+
 ```json
 {
   "status": "error",
@@ -633,6 +681,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "status": "error",
@@ -662,5 +711,3 @@ All endpoints may return the following error responses:
 5. Category names must be globally unique
 6. SubCategory names must be unique within their parent category
 7. Product names must be unique within their category and subcategory combination
-
-
