@@ -29,7 +29,7 @@ app.options("*", cors());
 app.use(compression());
 
 // Database connection
-require("./config/db")();
+const connectToDatabase = require("./config/db");
 
 // Body Parser Middleware => limit the body size to 20kb
 app.use(express.json({ limit: "20kb" }));
@@ -75,7 +75,14 @@ app.all("*", (req, res, next) => {
 app.use(globalError);
 
 // Server Connection
-const startServer = () => {
+const startServer = async () => {
+  try {
+    await connectToDatabase();
+  } catch (error) {
+    console.error("Unable to start server without database connection.", error);
+    process.exit(1);
+  }
+
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
     figlet("Server Running!", (err, data) => {
