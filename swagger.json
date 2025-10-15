@@ -342,7 +342,13 @@
                   "category": { "type": "string" },
                   "subCategory": { "type": "string" }
                 },
-                "required": ["name", "price", "stock", "category", "subCategory"]
+                "required": [
+                  "name",
+                  "price",
+                  "stock",
+                  "category",
+                  "subCategory"
+                ]
               }
             }
           }

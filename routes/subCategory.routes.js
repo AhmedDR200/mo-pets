@@ -10,7 +10,10 @@ const { uploadSingleImage } = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
-router.route("/").get(getSubCategories).post(uploadSingleImage, createSubCategory);
+router
+  .route("/")
+  .get(getSubCategories)
+  .post(uploadSingleImage, createSubCategory);
 
 router
   .route("/:id")

@@ -8,7 +8,12 @@ const cloudinary = require("../config/cloudinary");
  * @param {object} [options] - Additional Cloudinary options
  * @returns {Promise<object>} Cloudinary upload result
  */
-const uploadBufferToCloudinary = async (buffer, mimetype, folder, options = {}) => {
+const uploadBufferToCloudinary = async (
+  buffer,
+  mimetype,
+  folder,
+  options = {},
+) => {
   const base64 = buffer.toString("base64");
   const dataUri = `data:${mimetype};base64,${base64}`;
   const uploadOptions = { folder, ...options };
