@@ -3,6 +3,7 @@ const Product = require("../models/Product.model");
 const SubCategory = require("../models/SubCategory.model");
 const Category = require("../models/Category.model");
 const ApiError = require("../utils/apiError.util");
+const { uploadBufferToCloudinary } = require("../utils/cloudinary.util");
 
 const parsePagination = (query) => {
   const page = Math.max(parseInt(query.page) || 1, 1);
@@ -41,12 +42,25 @@ exports.createProduct = async (req, res, next) => {
     if (!subCat) return next(new ApiError("SubCategory not found", 404));
     if (String(subCat.category) !== String(cat._id))
       return next(new ApiError("subCategory does not belong to category", 400));
+    let imageUrl = image;
+    if (req.file) {
+      try {
+        const result = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.mimetype,
+          "products",
+        );
+        imageUrl = result.secure_url;
+      } catch (e) {
+        return next(new ApiError("Image upload failed", 400));
+      }
+    }
     const product = await Product.create({
       name: name.trim(),
       price,
       description,
       stock,
-      image,
+      image: imageUrl,
       category,
       subCategory,
     });
@@ -164,6 +178,18 @@ exports.updateProduct = async (req, res, next) => {
       }
     }
 
+    if (req.file) {
+      try {
+        const result = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.mimetype,
+          "products",
+        );
+        req.body.image = result.secure_url;
+      } catch (e) {
+        return next(new ApiError("Image upload failed", 400));
+      }
+    }
     const data = await Product.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,

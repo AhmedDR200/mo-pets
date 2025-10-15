@@ -3,6 +3,7 @@ const Category = require("../models/Category.model");
 const SubCategory = require("../models/SubCategory.model");
 const Product = require("../models/Product.model");
 const ApiError = require("../utils/apiError.util");
+const { uploadBufferToCloudinary } = require("../utils/cloudinary.util");
 
 const parsePagination = (query) => {
   const page = Math.max(parseInt(query.page) || 1, 1);
@@ -17,10 +18,23 @@ exports.createCategory = async (req, res, next) => {
     if (!name) return next(new ApiError("Category name is required", 400));
     const exists = await Category.findOne({ name: name.trim() });
     if (exists) return next(new ApiError("Category name already exists", 409));
+    let imageUrl = image;
+    if (req.file) {
+      try {
+        const result = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.mimetype,
+          "categories",
+        );
+        imageUrl = result.secure_url;
+      } catch (e) {
+        return next(new ApiError("Image upload failed", 400));
+      }
+    }
     const category = await Category.create({
       name: name.trim(),
       description,
-      image,
+      image: imageUrl,
     });
     res.status(201).json({ status: "success", data: category });
   } catch (err) {
@@ -69,6 +83,18 @@ exports.updateCategory = async (req, res, next) => {
       });
       if (exists)
         return next(new ApiError("Category name already exists", 409));
+    }
+    if (req.file) {
+      try {
+        const result = await uploadBufferToCloudinary(
+          req.file.buffer,
+          req.file.mimetype,
+          "categories",
+        );
+        req.body.image = result.secure_url;
+      } catch (e) {
+        return next(new ApiError("Image upload failed", 400));
+      }
     }
     const data = await Category.findByIdAndUpdate(id, req.body, {
       new: true,

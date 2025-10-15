@@ -70,6 +70,21 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/CategoryCreate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  }
+                },
+                "required": ["name", "description"]
+              }
             }
           }
         },
@@ -97,7 +112,7 @@
           "404": { "description": "Not Found" }
         }
       },
-      "put": {
+      "patch": {
         "summary": "Update category",
         "tags": ["Categories"],
         "parameters": [
@@ -113,6 +128,20 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/CategoryUpdate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  }
+                }
+              }
             }
           }
         },
@@ -165,6 +194,22 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/SubCategoryCreate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  },
+                  "category": { "type": "string" }
+                },
+                "required": ["name", "description", "category"]
+              }
             }
           }
         },
@@ -192,7 +237,7 @@
           "404": { "description": "Not Found" }
         }
       },
-      "put": {
+      "patch": {
         "summary": "Update subcategory",
         "tags": ["SubCategories"],
         "parameters": [
@@ -208,6 +253,21 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/SubCategoryUpdate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  },
+                  "category": { "type": "string" }
+                }
+              }
             }
           }
         },
@@ -265,6 +325,25 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/ProductCreate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "number", "minimum": 0 },
+                  "stock": { "type": "integer", "minimum": 0 },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  },
+                  "category": { "type": "string" },
+                  "subCategory": { "type": "string" }
+                },
+                "required": ["name", "price", "stock", "category", "subCategory"]
+              }
             }
           }
         },
@@ -292,7 +371,7 @@
           "404": { "description": "Not Found" }
         }
       },
-      "put": {
+      "patch": {
         "summary": "Update product",
         "tags": ["Products"],
         "parameters": [
@@ -308,6 +387,24 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/ProductUpdate" }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "number", "minimum": 0 },
+                  "stock": { "type": "integer", "minimum": 0 },
+                  "description": { "type": "string" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload"
+                  },
+                  "category": { "type": "string" },
+                  "subCategory": { "type": "string" }
+                }
+              }
             }
           }
         },
