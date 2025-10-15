@@ -18,10 +18,20 @@
       "url": "https://mo-pets.vercel.app"
     }
   ],
+  "tags": [
+    { "name": "Health", "description": "Server health and status" },
+    { "name": "Categories", "description": "Category CRUD and listing" },
+    {
+      "name": "SubCategories",
+      "description": "Subcategory CRUD and listing"
+    },
+    { "name": "Products", "description": "Product CRUD and listing" }
+  ],
   "paths": {
     "/api/health": {
       "get": {
         "summary": "Health check",
+        "tags": ["Health"],
         "responses": {
           "200": {
             "description": "Server is running"
@@ -32,6 +42,7 @@
     "/api/categories": {
       "get": {
         "summary": "List categories",
+        "tags": ["Categories"],
         "parameters": [
           {
             "name": "page",
@@ -53,6 +64,7 @@
       },
       "post": {
         "summary": "Create category",
+        "tags": ["Categories"],
         "requestBody": {
           "required": true,
           "content": {
@@ -71,6 +83,7 @@
     "/api/categories/{id}": {
       "get": {
         "summary": "Get category",
+        "tags": ["Categories"],
         "parameters": [
           {
             "name": "id",
@@ -86,6 +99,7 @@
       },
       "put": {
         "summary": "Update category",
+        "tags": ["Categories"],
         "parameters": [
           {
             "name": "id",
@@ -109,6 +123,7 @@
       },
       "delete": {
         "summary": "Delete category",
+        "tags": ["Categories"],
         "parameters": [
           {
             "name": "id",
@@ -126,6 +141,7 @@
     "/api/subcategories": {
       "get": {
         "summary": "List subcategories",
+        "tags": ["SubCategories"],
         "parameters": [
           {
             "name": "page",
@@ -143,6 +159,7 @@
       },
       "post": {
         "summary": "Create subcategory",
+        "tags": ["SubCategories"],
         "requestBody": {
           "required": true,
           "content": {
@@ -161,6 +178,7 @@
     "/api/subcategories/{id}": {
       "get": {
         "summary": "Get subcategory",
+        "tags": ["SubCategories"],
         "parameters": [
           {
             "name": "id",
@@ -176,6 +194,7 @@
       },
       "put": {
         "summary": "Update subcategory",
+        "tags": ["SubCategories"],
         "parameters": [
           {
             "name": "id",
@@ -199,6 +218,7 @@
       },
       "delete": {
         "summary": "Delete subcategory",
+        "tags": ["SubCategories"],
         "parameters": [
           {
             "name": "id",
@@ -216,6 +236,7 @@
     "/api/products": {
       "get": {
         "summary": "List products",
+        "tags": ["Products"],
         "parameters": [
           {
             "name": "page",
@@ -238,6 +259,7 @@
       },
       "post": {
         "summary": "Create product",
+        "tags": ["Products"],
         "requestBody": {
           "required": true,
           "content": {
@@ -256,6 +278,7 @@
     "/api/products/{id}": {
       "get": {
         "summary": "Get product",
+        "tags": ["Products"],
         "parameters": [
           {
             "name": "id",
@@ -271,6 +294,7 @@
       },
       "put": {
         "summary": "Update product",
+        "tags": ["Products"],
         "parameters": [
           {
             "name": "id",
@@ -294,6 +318,7 @@
       },
       "delete": {
         "summary": "Delete product",
+        "tags": ["Products"],
         "parameters": [
           {
             "name": "id",
