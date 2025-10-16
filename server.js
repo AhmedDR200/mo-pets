@@ -16,6 +16,7 @@ const mountRoutes = require("./routes/main.routes");
 // Utils
 const ApiError = require("./utils/apiError.util");
 const globalError = require("./middleware/error.middleware");
+const { scheduleOfferExpirationCheck } = require("./utils/offerScheduler.util");
 dotenv.config();
 
 // Express app
@@ -78,6 +79,9 @@ app.use(globalError);
 const startServer = async () => {
   try {
     await connectToDatabase();
+    
+    // Initialize the offer expiration scheduler
+    scheduleOfferExpirationCheck();
   } catch (error) {
     console.error("Unable to start server without database connection.", error);
     process.exit(1);

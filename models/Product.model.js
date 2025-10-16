@@ -12,6 +12,21 @@ const productSchema = new mongoose.Schema(
       required: [true, "Product price is required"],
       min: [0, "Product price must be greater than 0"],
     },
+    originalPrice: {
+      type: Number,
+      default: function() {
+        return this.price;
+      }
+    },
+    hasActiveOffer: {
+      type: Boolean,
+      default: false
+    },
+    activeOfferId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Offer",
+      default: null
+    },
     description: { type: String, trim: true },
     stock: {
       type: Number,

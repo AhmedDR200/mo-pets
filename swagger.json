@@ -3,7 +3,7 @@
   "info": {
     "title": "MO API",
     "version": "1.0.0",
-    "description": "API documentation for Categories, SubCategories, and Products"
+    "description": "API documentation for Pets E-Commerce"
   },
   "servers": [
     {
@@ -25,9 +25,220 @@
       "name": "SubCategories",
       "description": "Subcategory CRUD and listing"
     },
-    { "name": "Products", "description": "Product CRUD and listing" }
+    { "name": "Products", "description": "Product CRUD and listing" },
+    { "name": "Offers", "description": "Offer CRUD and listing" }
   ],
   "paths": {
+    "/api/offers": {
+      "get": {
+        "summary": "List offers",
+        "description": "Get a list of all offers with pagination, sorting, and filtering options",
+        "tags": ["Offers"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Number of offers per page"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": { "type": "string", "default": "-createdAt" },
+            "description": "Sort field and direction (prefix with - for descending)"
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": { "type": "boolean" },
+            "description": "Filter by active status (true/false)"
+          },
+          {
+            "name": "current",
+            "in": "query",
+            "schema": { "type": "boolean" },
+            "description": "Filter for currently active offers (within start and end dates)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "paginationInfo": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": { "type": "integer" },
+                        "totalPages": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "totalDocuments": { "type": "integer" }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OfferResponse" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create offer",
+        "description": "Create a new offer with discount that will be applied to the specified products. Products must not already have active offers.",
+        "tags": ["Offers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OfferCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/OfferResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { 
+            "description": "Bad request - One or more products already have an active offer or end date is not after start date" 
+          },
+          "404": { 
+            "description": "One or more products not found" 
+          }
+        }
+      }
+    },
+    "/api/offers/{id}": {
+      "get": {
+        "summary": "Get offer by ID",
+        "description": "Get detailed information about a specific offer",
+        "tags": ["Offers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Offer ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/OfferResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offer not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update offer",
+        "description": "Update an existing offer. When updating products, checks are performed to ensure new products don't already have active offers. If products are removed from the offer, their original prices are restored.",
+        "tags": ["Offers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Offer ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OfferUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/OfferResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { 
+            "description": "Bad request - One or more products already have an active offer, end date is not after start date, or invalid data" 
+          },
+          "404": { 
+            "description": "Offer not found or one or more products not found" 
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete offer",
+        "description": "Delete an offer and restore original prices for all associated products. This is handled by the Offer model post-delete middleware.",
+        "tags": ["Offers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Offer ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content - Offer deleted successfully and product prices restored"
+          },
+          "404": {
+            "description": "Offer not found"
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "summary": "Health check",
@@ -498,6 +709,171 @@
           "image": { "type": "string" },
           "category": { "type": "string" },
           "subCategory": { "type": "string" }
+        }
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "originalPrice": { 
+            "type": "number",
+            "description": "Original price before discount (only present when product has active offer)"
+          },
+          "discountedPrice": { 
+            "type": "number",
+            "description": "Discounted price (only present when product has active offer)"
+          },
+          "hasActiveOffer": { 
+            "type": "boolean",
+            "description": "Indicates if product currently has an active offer applied"
+          },
+          "stock": { "type": "integer" },
+          "description": { "type": "string" },
+          "images": { 
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "category": { 
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "subCategory": { 
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OfferCreate": {
+        "type": "object",
+        "required": ["title", "description", "discount", "startDate", "endDate", "products"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "minLength": 20
+          },
+          "discount": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "Discount percentage (1-99)"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer start date and time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer end date and time (must be after startDate)"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Product IDs to apply the offer to"
+            },
+            "description": "Products that will have this discount applied"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the offer is active"
+          }
+        }
+      },
+      "OfferUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "minLength": 20
+          },
+          "discount": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "Discount percentage (1-99)"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer start date and time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer end date and time (must be after startDate)"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Products that will have this discount applied"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the offer is active"
+          }
+        }
+      },
+      "OfferResponse": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "discount": { 
+            "type": "number",
+            "description": "Discount percentage (1-99)"
+          },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "products": { 
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": { "type": "string" },
+                "title": { "type": "string" },
+                "price": { "type": "number" },
+                "images": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            },
+            "description": "Array of products with applied discounts"
+          },
+          "active": { 
+            "type": "boolean",
+            "description": "Whether the offer is active and discounts are applied"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       }
     }

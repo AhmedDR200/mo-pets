@@ -88,6 +88,7 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
  * @param {string} sort - Sort order (default: "-createdAt")
  * @param {string} category - Category ID (optional)
  * @param {string} subCategory - SubCategory ID (optional)
+ * @param {string} name - Product name for search (optional)
  * @returns {Promise<void>}
  */
 exports.getProducts = asyncHandler(async (req, res, next) => {
@@ -100,35 +101,65 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     mongoose.Types.ObjectId.isValid(req.query.subCategory)
   )
     filter.subCategory = req.query.subCategory;
+  if (req.query.name) {
+    filter.name = { $regex: req.query.name, $options: "i" };
+  }
   const total = await Product.countDocuments(filter);
-  const data = await Product.find(filter)
+  const products = await Product.find(filter)
     .sort(sort)
     .skip(skip)
     .limit(limit)
     .populate("category", "name")
     .populate("subCategory", "name");
+    
+  // Add offer information to response
+  const productsWithOfferInfo = products.map(product => {
+    const productObj = product.toObject();
+    if (product.hasActiveOffer) {
+      productObj.originalPrice = product.originalPrice;
+      productObj.discountedPrice = product.price;
+      productObj.hasActiveOffer = true;
+    }
+    return productObj;
+  });
+  
   res.status(200).json({
     status: "success",
-    results: data.length,
+    results: products.length,
     pagination: { page, limit, total },
-    data,
+    data: productsWithOfferInfo,
   });
 });
 
 /**
- * Get a product by ID.
+ * Get a specific product by ID.
  * @param {string} id - Product ID
  * @returns {Promise<void>}
  */
 exports.getProduct = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id))
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new ApiError("Invalid product id", 400));
-  const data = await Product.findById(id)
+  }
+  const product = await Product.findById(id)
     .populate("category", "name")
     .populate("subCategory", "name");
-  if (!data) return next(new ApiError("Product not found", 404));
-  res.status(200).json({ status: "success", data });
+  if (!product) {
+    return next(new ApiError("Product not found", 404));
+  }
+  
+  // Add offer information to response
+  const productObj = product.toObject();
+  if (product.hasActiveOffer) {
+    productObj.originalPrice = product.originalPrice;
+    productObj.discountedPrice = product.price;
+    productObj.hasActiveOffer = true;
+  }
+  
+  res.status(200).json({
+    status: "success",
+    data: productObj,
+  });
 });
 
 /**

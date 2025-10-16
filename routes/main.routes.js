@@ -5,12 +5,14 @@ const mongoose = require("mongoose");
 const categoryRoutes = require("./category.routes");
 const productRoutes = require("./product.routes");
 const subCategoryRoutes = require("./subCategory.routes");
+const offerRoutes = require("./offer.routes");
 
 const mountRoutes = (app) => {
   // Mount routes
   app.use("/api/categories", categoryRoutes);
   app.use("/api/products", productRoutes);
   app.use("/api/subcategories", subCategoryRoutes);
+  app.use("/api/offers", offerRoutes);
 
   // Health check route
   app.get("/api/health", async (req, res) => {
