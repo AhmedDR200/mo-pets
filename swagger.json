@@ -3,7 +3,7 @@
   "info": {
     "title": "MO API",
     "version": "1.0.0",
-    "description": "API documentation for Pets E-Commerce"
+    "description": "API documentation for Pets Care E-Commerce"
   },
   "servers": [
     {
@@ -26,9 +26,227 @@
       "description": "Subcategory CRUD and listing"
     },
     { "name": "Products", "description": "Product CRUD and listing" },
-    { "name": "Offers", "description": "Offer CRUD and listing" }
+    { "name": "Offers", "description": "Offer CRUD and listing" },
+    { "name": "Sliders", "description": "Slider CRUD operations" }
   ],
   "paths": {
+    "/api/sliders": {
+      "get": {
+        "summary": "List all sliders",
+        "description": "Get a list of all sliders with pagination",
+        "tags": ["Sliders"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Number of sliders per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of sliders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer", "example": 5 },
+                    "totalCount": { "type": "integer", "example": 20 },
+                    "page": { "type": "integer", "example": 1 },
+                    "limit": { "type": "integer", "example": 10 },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Slider" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new slider",
+        "description": "Add a new slider image",
+        "tags": ["Sliders"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Slider image file"
+                  },
+                  "alt": {
+                    "type": "string",
+                    "description": "Alternative text for the image"
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "Whether the slider is active"
+                  },
+                  "order": {
+                    "type": "integer",
+                    "description": "Display order of the slider"
+                  }
+                },
+                "required": ["image"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Slider created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Slider" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/sliders/active": {
+      "get": {
+        "summary": "Get active sliders",
+        "description": "Get all active sliders for display on the website",
+        "tags": ["Sliders"],
+        "responses": {
+          "200": {
+            "description": "List of active sliders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer", "example": 5 },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Slider" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sliders/{id}": {
+      "get": {
+        "summary": "Get slider by ID",
+        "description": "Get details of a specific slider",
+        "tags": ["Sliders"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Slider ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slider details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Slider" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Slider not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete slider",
+        "description": "Delete a slider by ID",
+        "tags": ["Sliders"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Slider ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Slider deleted successfully"
+          },
+          "404": {
+            "description": "Slider not found"
+          }
+        }
+      }
+    },
+    "/api/sliders/{id}/toggle-status": {
+      "patch": {
+        "summary": "Toggle slider status",
+        "description": "Toggle the active status of a slider",
+        "tags": ["Sliders"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Slider ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slider status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Slider" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Slider not found"
+          }
+        }
+      }
+    },
     "/api/offers": {
       "get": {
         "summary": "List offers",
@@ -650,6 +868,41 @@
   },
   "components": {
     "schemas": {
+      "Slider": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "60d21b4667d0d8992e610c85"
+          },
+          "image": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/example/image/upload/v1624291234/sliders/image1.jpg"
+          },
+          "alt": {
+            "type": "string",
+            "example": "Slider image"
+          },
+          "active": {
+            "type": "boolean",
+            "example": true
+          },
+          "order": {
+            "type": "integer",
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-06-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-06-15T10:00:00.000Z"
+          }
+        }
+      },
       "CategoryCreate": {
         "type": "object",
         "required": ["name", "description"],
