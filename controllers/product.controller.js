@@ -10,7 +10,8 @@ const { parsePagination } = require("../utils/helpers.util");
 /**
  * Create a new product.
  * @param {string} name - Product name
- * @param {number} price - Product price
+ * @param {number} wholesalePrice - Product wholesale price
+ * @param {number} retailPrice - Product retail price
  * @param {string} [description] - Product description
  * @param {number} stock - Product stock quantity
  * @param {string} [image] - Product image URL
@@ -19,18 +20,28 @@ const { parsePagination } = require("../utils/helpers.util");
  * @returns {Promise<void>}
  */
 exports.createProduct = asyncHandler(async (req, res, next) => {
-  const { name, price, description, stock, image, category, subCategory } =
+  const {
+    name,
+    wholesalePrice,
+    retailPrice,
+    description,
+    stock,
+    image,
+    category,
+    subCategory,
+  } =
     req.body;
   if (
     !name ||
     category == null ||
     subCategory == null ||
-    price == null ||
+    wholesalePrice == null ||
+    retailPrice == null ||
     stock == null
   ) {
     return next(
       new ApiError(
-        "name, price, stock, category and subCategory are required",
+        "name, wholesalePrice, retailPrice, stock, category and subCategory are required",
         400,
       ),
     );
@@ -41,6 +52,16 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   ) {
     return next(new ApiError("Invalid category or subCategory id", 400));
   }
+
+  if (Number(retailPrice) <= Number(wholesalePrice)) {
+    return next(
+      new ApiError(
+        "retailPrice must be greater than wholesalePrice",
+        400,
+      ),
+    );
+  }
+
   const cat = await Category.findById(category);
   const subCat = await SubCategory.findById(subCategory);
   if (!cat) return next(new ApiError("Category not found", 404));
@@ -62,7 +83,8 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
   }
   const product = await Product.create({
     name: name.trim(),
-    price,
+    wholesalePrice,
+    retailPrice,
     description,
     stock,
     image: imageUrl,
@@ -111,18 +133,21 @@ exports.getProducts = asyncHandler(async (req, res, next) => {
     .limit(limit)
     .populate("category", "name")
     .populate("subCategory", "name");
-    
+
   // Add offer information to response
   const productsWithOfferInfo = products.map(product => {
     const productObj = product.toObject();
     if (product.hasActiveOffer) {
-      productObj.originalPrice = product.originalPrice;
-      productObj.discountedPrice = product.price;
+      productObj.originalRetailPrice = product.originalRetailPrice;
+      productObj.discountedRetailPrice = product.retailPrice;
       productObj.hasActiveOffer = true;
+    }
+    if (!req.wholesaleAccessGranted) {
+      delete productObj.wholesalePrice;
     }
     return productObj;
   });
-  
+
   res.status(200).json({
     status: "success",
     results: products.length,
@@ -147,15 +172,18 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
   if (!product) {
     return next(new ApiError("Product not found", 404));
   }
-  
+
   // Add offer information to response
   const productObj = product.toObject();
   if (product.hasActiveOffer) {
-    productObj.originalPrice = product.originalPrice;
-    productObj.discountedPrice = product.price;
+    productObj.originalRetailPrice = product.originalRetailPrice;
+    productObj.discountedRetailPrice = product.retailPrice;
     productObj.hasActiveOffer = true;
   }
-  
+  if (!req.wholesaleAccessGranted) {
+    delete productObj.wholesalePrice;
+  }
+
   res.status(200).json({
     status: "success",
     data: productObj,
@@ -228,7 +256,43 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
       return next(new ApiError("Image upload failed", 400));
     }
   }
-  const data = await Product.findByIdAndUpdate(id, req.body, {
+  const updatePayload = { ...req.body };
+
+  const hasWholesaleUpdate = Object.prototype.hasOwnProperty.call(
+    updatePayload,
+    "wholesalePrice",
+  );
+  const hasRetailUpdate = Object.prototype.hasOwnProperty.call(
+    updatePayload,
+    "retailPrice",
+  );
+
+  if (hasWholesaleUpdate || hasRetailUpdate) {
+    const nextWholesalePrice = hasWholesaleUpdate
+      ? Number(updatePayload.wholesalePrice)
+      : Number(current.wholesalePrice);
+    const nextRetailPrice = hasRetailUpdate
+      ? Number(updatePayload.retailPrice)
+      : Number(current.retailPrice);
+
+    if (nextRetailPrice >= nextWholesalePrice) {
+      return next(
+        new ApiError(
+          "retailPrice must be greater than wholesalePrice",
+          400,
+        ),
+      );
+    }
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(updatePayload, "retailPrice") &&
+    !current.hasActiveOffer
+  ) {
+    updatePayload.originalRetailPrice = updatePayload.retailPrice;
+  }
+
+  const data = await Product.findByIdAndUpdate(id, updatePayload, {
     new: true,
     runValidators: true,
   });

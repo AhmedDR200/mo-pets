@@ -5,6 +5,18 @@ const Product = require("../models/Product.model");
 const ApiError = require("../utils/apiError.util");
 const { parsePagination } = require("../utils/helpers.util");
 
+const formatOfferResponse = (offerDoc, includeWholesale) => {
+  const offerObj = offerDoc.toObject();
+  if (!includeWholesale && Array.isArray(offerObj.products)) {
+    offerObj.products = offerObj.products.map(product => {
+      const productClone = { ...product };
+      delete productClone.wholesalePrice;
+      return productClone;
+    });
+  }
+  return offerObj;
+};
+
 /**
  * @desc    Create a new offer
  * @route   POST /api/offers
@@ -65,18 +77,22 @@ const getOffers = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(limit);
 
+  const sanitizedOffers = offers.map(offer =>
+    formatOfferResponse(offer, req.wholesaleAccessGranted),
+  );
+
   const totalOffers = await Offer.countDocuments(filter);
 
   res.status(200).json({
     status: "success",
-    results: offers.length,
+    results: sanitizedOffers.length,
     paginationInfo: {
       currentPage: page,
       totalPages: Math.ceil(totalOffers / limit),
       limit,
       totalDocuments: totalOffers,
     },
-    data: offers,
+    data: sanitizedOffers,
   });
 });
 
@@ -96,7 +112,7 @@ const getOffer = asyncHandler(async (req, res, next) => {
   
   res.status(200).json({
     status: "success",
-    data: offer,
+    data: formatOfferResponse(offer, req.wholesaleAccessGranted),
   });
 });
 
@@ -134,7 +150,7 @@ const updateOffer = asyncHandler(async (req, res, next) => {
         const product = await Product.findById(productId);
         if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
           await Product.findByIdAndUpdate(productId, {
-            price: product.originalPrice,
+            retailPrice: product.originalRetailPrice,
             hasActiveOffer: false,
             activeOfferId: null
           });
@@ -176,7 +192,7 @@ const updateOffer = asyncHandler(async (req, res, next) => {
         const product = await Product.findById(productId);
         if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
           await Product.findByIdAndUpdate(productId, {
-            price: product.originalPrice,
+            retailPrice: product.originalRetailPrice,
             hasActiveOffer: false,
             activeOfferId: null
           });

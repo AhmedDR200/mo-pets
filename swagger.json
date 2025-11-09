@@ -27,9 +27,170 @@
     },
     { "name": "Products", "description": "Product CRUD and listing" },
     { "name": "Offers", "description": "Offer CRUD and listing" },
-    { "name": "Sliders", "description": "Slider CRUD operations" }
+    { "name": "Sliders", "description": "Slider CRUD operations" },
+    { "name": "Search", "description": "Search across all data types" },
+    { "name": "Access", "description": "Wholesale access request and verification" }
   ],
   "paths": {
+    "/api/search": {
+      "get": {
+        "summary": "Search across all data types",
+        "description": "Search for products, categories, subcategories, and offers with a single query",
+        "tags": ["Search"],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Search term to find matches across all data types"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional `Bearer` token returned from wholesale verification to include wholesale pricing in results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful search operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": {
+                      "type": "object",
+                      "properties": {
+                        "products": {
+                          "type": "object",
+                          "properties": {
+                            "count": { "type": "integer", "example": 2 },
+                            "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
+                          }
+                        },
+                        "categories": {
+                          "type": "object",
+                          "properties": {
+                            "count": { "type": "integer", "example": 1 },
+                            "data": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } }
+                          }
+                        },
+                        "subCategories": {
+                          "type": "object",
+                          "properties": {
+                            "count": { "type": "integer", "example": 3 },
+                            "data": { "type": "array", "items": { "$ref": "#/components/schemas/SubCategory" } }
+                          }
+                        },
+                        "offers": {
+                          "type": "object",
+                          "properties": {
+                            "count": { "type": "integer", "example": 1 },
+                            "data": { "type": "array", "items": { "$ref": "#/components/schemas/Offer" } }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing query parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "message": { "type": "string", "example": "Search query is required" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/wholesale/request": {
+      "post": {
+        "summary": "Request wholesale access",
+        "description": "Submit a wholesale access request. The system emails an OTP to the administrator, who shares it with the requester.",
+        "tags": ["Access"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WholesaleAccessRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted. Await OTP from administrator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": {
+                      "type": "string",
+                      "example": "Wholesale access request submitted. An administrator will share the passcode with you."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid email address"
+          },
+          "500": {
+            "description": "Wholesale access not configured"
+          }
+        }
+      }
+    },
+    "/api/access/wholesale/verify": {
+      "post": {
+        "summary": "Verify wholesale OTP",
+        "description": "Verify the administrator-issued OTP to obtain a 2-hour wholesale access token.",
+        "tags": ["Access"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WholesaleAccessVerification" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Wholesale access granted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WholesaleAccessTokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing email or OTP"
+          },
+          "401": {
+            "description": "Invalid or expired OTP"
+          },
+          "500": {
+            "description": "Wholesale access not configured"
+          }
+        }
+      }
+    },
     "/api/sliders": {
       "get": {
         "summary": "List all sliders",
@@ -282,6 +443,13 @@
             "in": "query",
             "schema": { "type": "boolean" },
             "description": "Filter for currently active offers (within start and end dates)"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional `Bearer` token returned from wholesale verification to include wholesale pricing in offer products"
           }
         ],
         "responses": {
@@ -364,6 +532,13 @@
               "type": "string"
             },
             "description": "Offer ID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional `Bearer` token returned from wholesale verification to include wholesale pricing in offer products"
           }
         ],
         "responses": {
@@ -534,6 +709,13 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional `Bearer` token returned from wholesale verification to include wholesale pricing in results"
           }
         ],
         "responses": {
@@ -742,6 +924,13 @@
             "name": "subCategory",
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional `Bearer` token returned from wholesale verification to include wholesale pricing in results"
           }
         ],
         "responses": { "200": { "description": "Success" } }
@@ -760,7 +949,8 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "price": { "type": "number", "minimum": 0 },
+                  "wholesalePrice": { "type": "number", "minimum": 0 },
+                  "retailPrice": { "type": "number", "minimum": 0 },
                   "stock": { "type": "integer", "minimum": 0 },
                   "description": { "type": "string" },
                   "image": {
@@ -773,7 +963,8 @@
                 },
                 "required": [
                   "name",
-                  "price",
+                  "wholesalePrice",
+                  "retailPrice",
                   "stock",
                   "category",
                   "subCategory"
@@ -828,7 +1019,8 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "price": { "type": "number", "minimum": 0 },
+                  "wholesalePrice": { "type": "number", "minimum": 0 },
+                  "retailPrice": { "type": "number", "minimum": 0 },
                   "stock": { "type": "integer", "minimum": 0 },
                   "description": { "type": "string" },
                   "image": {
@@ -867,6 +1059,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "WholesaleAccessToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token returned by `/api/access/wholesale/verify`. Include as `Authorization: Bearer <token>` to view wholesale pricing."
+      }
+    },
     "schemas": {
       "Slider": {
         "type": "object",
@@ -941,10 +1141,18 @@
       },
       "ProductCreate": {
         "type": "object",
-        "required": ["name", "price", "stock", "category", "subCategory"],
+        "required": [
+          "name",
+          "wholesalePrice",
+          "retailPrice",
+          "stock",
+          "category",
+          "subCategory"
+        ],
         "properties": {
           "name": { "type": "string" },
-          "price": { "type": "number", "minimum": 0 },
+          "wholesalePrice": { "type": "number", "minimum": 0 },
+          "retailPrice": { "type": "number", "minimum": 0 },
           "stock": { "type": "integer", "minimum": 0 },
           "description": { "type": "string" },
           "image": { "type": "string" },
@@ -956,7 +1164,8 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "price": { "type": "number", "minimum": 0 },
+          "wholesalePrice": { "type": "number", "minimum": 0 },
+          "retailPrice": { "type": "number", "minimum": 0 },
           "stock": { "type": "integer", "minimum": 0 },
           "description": { "type": "string" },
           "image": { "type": "string" },
@@ -969,14 +1178,18 @@
         "properties": {
           "_id": { "type": "string" },
           "name": { "type": "string" },
-          "price": { "type": "number" },
-          "originalPrice": { 
+          "wholesalePrice": {
             "type": "number",
-            "description": "Original price before discount (only present when product has active offer)"
+            "description": "Wholesale price (omitted unless a valid wholesale token is supplied)"
           },
-          "discountedPrice": { 
+          "retailPrice": { "type": "number" },
+          "originalRetailPrice": { 
             "type": "number",
-            "description": "Discounted price (only present when product has active offer)"
+            "description": "Original retail price before discount (only present when product has active offer)"
+          },
+          "discountedRetailPrice": { 
+            "type": "number",
+            "description": "Discounted retail price (only present when product has active offer)"
           },
           "hasActiveOffer": { 
             "type": "boolean",
@@ -1111,12 +1324,13 @@
               "type": "object",
               "properties": {
                 "_id": { "type": "string" },
-                "title": { "type": "string" },
-                "price": { "type": "number" },
-                "images": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
+                "name": { "type": "string" },
+                "retailPrice": { "type": "number" },
+                "wholesalePrice": {
+                  "type": "number",
+                  "description": "Wholesale price (omitted unless a valid wholesale token is supplied)"
+                },
+                "image": { "type": "string" }
               }
             },
             "description": "Array of products with applied discounts"
@@ -1125,6 +1339,143 @@
             "type": "boolean",
             "description": "Whether the offer is active and discounts are applied"
           },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "wholesalePrice": {
+            "type": "number",
+            "description": "Wholesale price (omitted unless a valid wholesale token is supplied)"
+          },
+          "retailPrice": { "type": "number" },
+          "originalRetailPrice": { "type": "number" },
+          "hasActiveOffer": { "type": "boolean" },
+          "description": { "type": "string" },
+          "stock": { "type": "integer" },
+          "image": { "type": "string" },
+          "category": {
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "subCategory": {
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "products": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "subCategories": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SubCategory": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": {
+            "type": "object",
+            "properties": {
+              "_id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WholesaleAccessRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "buyer@example.com",
+            "description": "Email address requesting wholesale access"
+          }
+        }
+      },
+      "WholesaleAccessVerification": {
+        "type": "object",
+        "required": ["email", "otp"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "buyer@example.com",
+            "description": "Email used when requesting wholesale access"
+          },
+          "otp": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "example": "123456",
+            "description": "6-digit one-time passcode provided by the administrator"
+          }
+        }
+      },
+      "WholesaleAccessTokenResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "token": {
+            "type": "string",
+            "description": "Bearer token to access wholesale pricing"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expiration timestamp for the wholesale token (typically 2 hours from issuance)"
+          }
+        }
+      },
+      "Offer": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "discount": { "type": "number" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "products": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "active": { "type": "boolean" },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         }

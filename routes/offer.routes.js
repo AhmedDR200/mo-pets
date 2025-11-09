@@ -6,15 +6,16 @@ const {
   updateOffer,
   deleteOffer,
 } = require("../controllers/offer.controller");
+const verifyWholesaleAccess = require("../middleware/wholesaleAccess.middleware");
 
 const router = express.Router();
 
 router.route("/")
   .post(createOffer)
-  .get(getOffers);
+  .get(verifyWholesaleAccess, getOffers);
 
 router.route("/:id")
-  .get(getOffer)
+  .get(verifyWholesaleAccess, getOffer)
   .patch(updateOffer)
   .delete(deleteOffer);
 

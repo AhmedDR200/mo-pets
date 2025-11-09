@@ -7,6 +7,8 @@ const productRoutes = require("./product.routes");
 const subCategoryRoutes = require("./subCategory.routes");
 const offerRoutes = require("./offer.routes");
 const sliderRoutes = require("./slider.routes");
+const searchRoutes = require("./search.routes");
+const accessRoutes = require("./access.routes");
 
 const mountRoutes = (app) => {
   // Mount routes
@@ -15,6 +17,8 @@ const mountRoutes = (app) => {
   app.use("/api/subcategories", subCategoryRoutes);
   app.use("/api/offers", offerRoutes);
   app.use("/api/sliders", sliderRoutes);
+  app.use("/api/search", searchRoutes);
+  app.use("/api/access", accessRoutes);
 
   // Health check route
   app.get("/api/health", async (req, res) => {

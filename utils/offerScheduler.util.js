@@ -26,7 +26,7 @@ const processExpiredOffers = async () => {
 
       console.log(`Deactivated expired offer: ${offer._id} - ${offer.title}`);
 
-      // Restore original prices for all products in this offer
+      // Restore original retail prices for all products in this offer
       const productsToUpdate = await Product.find({
         _id: { $in: offer.products },
         hasActiveOffer: true,
@@ -34,12 +34,12 @@ const processExpiredOffers = async () => {
       });
 
       for (const product of productsToUpdate) {
-        product.price = product.originalPrice;
+        product.retailPrice = product.originalRetailPrice;
         product.hasActiveOffer = false;
         product.activeOfferId = null;
         await product.save();
 
-        console.log(`Restored original price for product: ${product._id} - ${product.name}`);
+        console.log(`Restored original retail price for product: ${product._id} - ${product.name}`);
       }
     }
 

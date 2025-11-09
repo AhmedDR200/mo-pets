@@ -510,14 +510,14 @@ GET /api/subcategories/60d5ec49f1b2c72b8c8e4b6b
 | `sort` | string | `-createdAt` | Sort field (prefix with `-` for descending) |
 | `category` | string | - | Filter by category ID |
 | `subCategory` | string | - | Filter by subcategory ID |
-| `minPrice` | number | - | Filter by minimum price |
-| `maxPrice` | number | - | Filter by maximum price |
+| `minRetailPrice` | number | - | Filter by minimum retail price |
+| `maxRetailPrice` | number | - | Filter by maximum retail price |
 | `hasOffer` | boolean | - | Filter products with active offers |
 
 **Example Request:**
 
 ```
-GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&minPrice=10&maxPrice=50
+GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&minRetailPrice=10&maxRetailPrice=50
 ```
 
 **Response:**
@@ -535,8 +535,10 @@ GET /api/products?page=1&limit=10&category=60d5ec49f1b2c72b8c8e4b5a&minPrice=10&
     {
       "_id": "60d5ec49f1b2c72b8c8e4b7c",
       "name": "Premium Dog Food",
-      "price": 29.99,
-      "originalPrice": 39.99,
+      "wholesalePrice": 24.99,
+      "retailPrice": 29.99,
+      "originalRetailPrice": 39.99,
+      "discountedRetailPrice": 29.99,
       "hasActiveOffer": true,
       "activeOfferId": "60d5ec49f1b2c72b8c8e4b8d",
       "description": "High-quality dog food",
@@ -582,8 +584,10 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
   "data": {
     "_id": "60d5ec49f1b2c72b8c8e4b7c",
     "name": "Premium Dog Food",
-    "price": 29.99,
-    "originalPrice": 39.99,
+    "wholesalePrice": 24.99,
+    "retailPrice": 29.99,
+    "originalRetailPrice": 39.99,
+    "discountedRetailPrice": 29.99,
     "hasActiveOffer": true,
     "activeOfferId": "60d5ec49f1b2c72b8c8e4b8d",
     "description": "High-quality dog food",
@@ -613,7 +617,8 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Product name |
-| `price` | number | Yes | Product price |
+| `wholesalePrice` | number | Yes | Product wholesale price |
+| `retailPrice` | number | Yes | Product retail price |
 | `description` | string | No | Product description |
 | `stock` | number | Yes | Product stock quantity |
 | `image` | string | No | Product image URL |
@@ -625,7 +630,8 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ```json
 {
   "name": "Premium Dog Food",
-  "price": 39.99,
+  "wholesalePrice": 24.99,
+  "retailPrice": 39.99,
   "description": "High-quality dog food",
   "stock": 100,
   "image": "https://example.com/dog-food.jpg",
@@ -642,8 +648,9 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
   "data": {
     "_id": "60d5ec49f1b2c72b8c8e4b7c",
     "name": "Premium Dog Food",
-    "price": 39.99,
-    "originalPrice": 39.99,
+    "wholesalePrice": 24.99,
+    "retailPrice": 39.99,
+    "originalRetailPrice": 39.99,
     "hasActiveOffer": false,
     "activeOfferId": null,
     "description": "High-quality dog food",
@@ -672,7 +679,8 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | string | Product name |
-| `price` | number | Product price |
+| `wholesalePrice` | number | Product wholesale price |
+| `retailPrice` | number | Product retail price |
 | `description` | string | Product description |
 | `stock` | number | Product stock quantity |
 | `image` | string | Product image URL |
@@ -684,7 +692,8 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
 ```json
 {
   "name": "Super Premium Dog Food",
-  "price": 49.99,
+  "wholesalePrice": 29.99,
+  "retailPrice": 49.99,
   "stock": 150
 }
 ```
@@ -697,8 +706,9 @@ GET /api/products/60d5ec49f1b2c72b8c8e4b7c
   "data": {
     "_id": "60d5ec49f1b2c72b8c8e4b7c",
     "name": "Super Premium Dog Food",
-    "price": 49.99,
-    "originalPrice": 49.99,
+    "wholesalePrice": 29.99,
+    "retailPrice": 49.99,
+    "originalRetailPrice": 49.99,
     "hasActiveOffer": false,
     "activeOfferId": null,
     "description": "High-quality dog food",
@@ -777,7 +787,7 @@ GET /api/offers?page=1&limit=10&active=true
         {
           "_id": "60d5ec49f1b2c72b8c8e4b7c",
           "name": "Premium Dog Food",
-          "price": 29.99
+          "retailPrice": 29.99
         }
       ],
       "active": true,
@@ -821,8 +831,8 @@ GET /api/offers/60d5ec49f1b2c72b8c8e4b8d
       {
         "_id": "60d5ec49f1b2c72b8c8e4b7c",
         "name": "Premium Dog Food",
-        "price": 29.99,
-        "originalPrice": 39.99
+        "retailPrice": 29.99,
+        "originalRetailPrice": 39.99
       }
     ],
     "active": true,
@@ -1223,8 +1233,9 @@ The API uses a consistent error handling format:
 ```javascript
 {
   name: String,          // Required
-  price: Number,         // Required, min: 0
-  originalPrice: Number, // Default: same as price
+  wholesalePrice: Number, // Required, min: 0
+  retailPrice: Number,    // Required, min: 0
+  originalRetailPrice: Number, // Default: same as retailPrice
   hasActiveOffer: Boolean, // Default: false
   activeOfferId: ObjectId, // Reference to Offer model
   description: String,   // Optional

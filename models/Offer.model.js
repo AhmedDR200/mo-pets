@@ -47,7 +47,7 @@ const offerSchema = new mongoose.Schema(
 offerSchema.pre(/^find/, function (next) {
   this.populate({
     path: "products",
-    select: "title price images",
+    select: "name wholesalePrice retailPrice image",
   });
   next();
 });
@@ -61,30 +61,31 @@ offerSchema.pre("save", function (next) {
 });
 
 // Middleware to apply discount to products when offer is created
-offerSchema.post("save", async function() {
+offerSchema.post("save", async function () {
   if (this.active && this.products && this.products.length > 0) {
     const Product = mongoose.model("Product");
     const now = new Date();
-    
+
     // Only apply discounts if the offer is currently active
     if (now >= this.startDate && now <= this.endDate) {
       for (const productId of this.products) {
         const product = await Product.findById(productId);
         if (product) {
-          // Store original price if not already stored
-          if (!product.hasActiveOffer) {
-            product.originalPrice = product.price;
-          }
-          
-          // Calculate discounted price
-          const discountedPrice = product.originalPrice * (1 - this.discount / 100);
-          
-          // Update product with discounted price and offer info
-          await Product.findByIdAndUpdate(productId, {
-            price: discountedPrice,
+          const originalRetailPrice = product.hasActiveOffer
+            ? product.originalRetailPrice
+            : product.retailPrice;
+
+          const updateData = {
+            retailPrice: originalRetailPrice * (1 - this.discount / 100),
             hasActiveOffer: true,
             activeOfferId: this._id
-          });
+          };
+
+          if (!product.hasActiveOffer) {
+            updateData.originalRetailPrice = originalRetailPrice;
+          }
+
+          await Product.findByIdAndUpdate(productId, updateData);
         }
       }
     }
@@ -92,15 +93,15 @@ offerSchema.post("save", async function() {
 });
 
 // Middleware to restore original prices when offer is deleted
-offerSchema.post("findOneAndDelete", async function(doc) {
+offerSchema.post("findOneAndDelete", async function (doc) {
   if (doc && doc.products && doc.products.length > 0) {
     const Product = mongoose.model("Product");
-    
+
     for (const productId of doc.products) {
       const product = await Product.findById(productId);
       if (product && product.hasActiveOffer && product.activeOfferId.equals(doc._id)) {
         await Product.findByIdAndUpdate(productId, {
-          price: product.originalPrice,
+          retailPrice: product.originalRetailPrice,
           hasActiveOffer: false,
           activeOfferId: null
         });
