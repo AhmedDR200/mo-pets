@@ -68,7 +68,12 @@ exports.getCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id))
     return next(new ApiError("Invalid category id", 400));
-  const data = await Category.findById(id);
+  const populateProducts = req.wholesaleAccessGranted
+    ? { path: "products" }
+    : { path: "products", select: "-wholesalePrice" };
+  const data = await Category.findById(id)
+    .populate(populateProducts)
+    .populate({ path: "subCategories" });
   if (!data) return next(new ApiError("Category not found", 404));
   res.status(200).json({ status: "success", data });
 });
