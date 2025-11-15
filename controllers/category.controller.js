@@ -60,22 +60,56 @@ exports.getCategories = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * Get a category by ID.
+ * Get a category by ID with paginated products.
  * @param {string} id - Category ID
+ * @param {string} page - Page number for products (default: 1)
+ * @param {string} limit - Number of products per page (default: 10)
+ * @param {string} sort - Sort order for products (default: "-createdAt")
  * @returns {Promise<void>}
  */
 exports.getCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id))
     return next(new ApiError("Invalid category id", 400));
-  const populateProducts = req.wholesaleAccessGranted
-    ? { path: "products" }
-    : { path: "products", select: "-wholesalePrice" };
-  const data = await Category.findById(id)
-    .populate(populateProducts)
+
+  // Get category with subCategories (no products yet)
+  const category = await Category.findById(id)
     .populate({ path: "subCategories" });
-  if (!data) return next(new ApiError("Category not found", 404));
-  res.status(200).json({ status: "success", data });
+
+  if (!category) return next(new ApiError("Category not found", 404));
+
+  // Parse pagination parameters for products
+  const { page, limit, sort, skip } = parsePagination(req.query);
+
+  // Build product query - filter by category
+  const productFilter = { category: id };
+
+  // Get total count of products in this category
+  const totalProducts = await Product.countDocuments(productFilter);
+
+  // Build select based on wholesale access
+  const productSelect = req.wholesaleAccessGranted === true
+    ? "-__v"
+    : "-__v -wholesalePrice";
+
+  // Fetch paginated products
+  const products = await Product.find(productFilter)
+    .select(productSelect)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
+
+  // Convert category to object and add paginated products
+  const categoryObj = category.toObject();
+  categoryObj.products = products;
+  categoryObj.pagination = {
+    page,
+    limit,
+    total: totalProducts,
+    totalPages: Math.ceil(totalProducts / limit),
+  };
+
+  res.status(200).json({ status: "success", data: categoryObj });
 });
 
 /**

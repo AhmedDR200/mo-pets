@@ -28,11 +28,11 @@ const createOffer = asyncHandler(async (req, res) => {
     const products = await Product.find({
       _id: { $in: req.body.products },
     });
-    
+
     if (products.length !== req.body.products.length) {
       throw new ApiError("Some products do not exist", 404);
     }
-    
+
     // Check if any products already have active offers
     const productsWithOffers = products.filter(product => product.hasActiveOffer);
     if (productsWithOffers.length > 0) {
@@ -42,9 +42,9 @@ const createOffer = asyncHandler(async (req, res) => {
   }
 
   const offer = await Offer.create(req.body);
-  
+
   // The price updates are handled by the Offer model middleware
-  
+
   res.status(201).json({
     status: "success",
     data: offer,
@@ -58,13 +58,13 @@ const createOffer = asyncHandler(async (req, res) => {
  */
 const getOffers = asyncHandler(async (req, res) => {
   const { page, limit, sort, skip } = parsePagination(req.query);
-  
+
   // Build filter object
   const filter = {};
   if (req.query.active) {
     filter.active = req.query.active === "true";
   }
-  
+
   // Filter for current active offers (if requested)
   if (req.query.current === "true") {
     const now = new Date();
@@ -103,13 +103,33 @@ const getOffers = asyncHandler(async (req, res) => {
  */
 const getOffer = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  
+
   const offer = await Offer.findById(id);
-  
+
   if (!offer) {
     throw new ApiError(`No offer found for id ${id}`, 404);
   }
-  
+
+  // Get product IDs from offer (they may already be populated with limited fields)
+  const productIds = offer.products.map(p =>
+    typeof p === 'object' && p._id ? p._id : p
+  );
+
+  // Fetch full product objects excluding category and subCategory
+  const fullProducts = await Product.find({
+    _id: { $in: productIds }
+  })
+    .select("-__v -category -subCategory");
+
+  // Create a map for quick lookup
+  const productMap = new Map(fullProducts.map(p => [p._id.toString(), p]));
+
+  // Replace products array with full product objects in the same order
+  offer.products = productIds.map(id => {
+    const productIdStr = id.toString ? id.toString() : id;
+    return productMap.get(productIdStr) || id;
+  });
+
   res.status(200).json({
     status: "success",
     data: formatOfferResponse(offer, req.wholesaleAccessGranted),
@@ -123,28 +143,28 @@ const getOffer = asyncHandler(async (req, res, next) => {
  */
 const updateOffer = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  
+
   // Check if products exist if included in update
   if (req.body.products && req.body.products.length > 0) {
     const products = await Product.find({
       _id: { $in: req.body.products },
     });
-    
+
     if (products.length !== req.body.products.length) {
       throw new ApiError("Some products do not exist", 404);
     }
-    
+
     // Get current offer to check which products are being removed
     const currentOffer = await Offer.findById(id);
     if (!currentOffer) {
       throw new ApiError(`No offer found for id ${id}`, 404);
     }
-    
+
     // Reset prices for products being removed from the offer
     const productsBeingRemoved = currentOffer.products.filter(
       p => !req.body.products.includes(p.toString())
     );
-    
+
     if (productsBeingRemoved.length > 0) {
       for (const productId of productsBeingRemoved) {
         const product = await Product.findById(productId);
@@ -157,33 +177,33 @@ const updateOffer = asyncHandler(async (req, res, next) => {
         }
       }
     }
-    
+
     // Check if new products already have active offers
     const newProductIds = req.body.products.filter(
       p => !currentOffer.products.map(cp => cp.toString()).includes(p)
     );
-    
+
     if (newProductIds.length > 0) {
       const newProducts = products.filter(p => newProductIds.includes(p._id.toString()));
       const productsWithOffers = newProducts.filter(p => p.hasActiveOffer);
-      
+
       if (productsWithOffers.length > 0) {
         const productNames = productsWithOffers.map(p => p.name).join(", ");
         throw new ApiError(`Some products already have active offers: ${productNames}`, 400);
       }
     }
   }
-  
+
   // Check date validation if both dates are provided
   if (req.body.startDate && req.body.endDate) {
     const startDate = new Date(req.body.startDate);
     const endDate = new Date(req.body.endDate);
-    
+
     if (endDate <= startDate) {
       throw new ApiError("End date must be after start date", 400);
     }
   }
-  
+
   // If offer is being deactivated, restore original prices
   if (req.body.active === false) {
     const currentOffer = await Offer.findById(id);
@@ -200,17 +220,17 @@ const updateOffer = asyncHandler(async (req, res, next) => {
       }
     }
   }
-  
+
   const offer = await Offer.findByIdAndUpdate(
     id,
     req.body,
     { new: true, runValidators: true }
   );
-  
+
   if (!offer) {
     throw new ApiError(`No offer found for id ${id}`, 404);
   }
-  
+
   res.status(200).json({
     status: "success",
     data: offer,
@@ -224,16 +244,16 @@ const updateOffer = asyncHandler(async (req, res, next) => {
  */
 const deleteOffer = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  
+
   const offer = await Offer.findByIdAndDelete(id);
-  
+
   if (!offer) {
     throw new ApiError(`No offer found for id ${id}`, 404);
   }
-  
+
   // Reset prices for all products in this offer
   // Note: This is now handled by the Offer model post-delete middleware
-  
+
   res.status(204).send();
 });
 
