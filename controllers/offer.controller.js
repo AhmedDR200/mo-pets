@@ -169,11 +169,22 @@ const updateOffer = asyncHandler(async (req, res, next) => {
       for (const productId of productsBeingRemoved) {
         const product = await Product.findById(productId);
         if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
-          await Product.findByIdAndUpdate(productId, {
-            retailPrice: product.originalRetailPrice,
+          const updateData = {
             hasActiveOffer: false,
             activeOfferId: null
-          });
+          };
+
+          // Restore retail price if it was discounted
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
+            updateData.retailPrice = product.originalRetailPrice;
+          }
+
+          // Restore wholesale price if it was discounted
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
+            updateData.wholesalePrice = product.originalWholesalePrice;
+          }
+
+          await Product.findByIdAndUpdate(productId, updateData);
         }
       }
     }
@@ -211,11 +222,94 @@ const updateOffer = asyncHandler(async (req, res, next) => {
       for (const productId of currentOffer.products) {
         const product = await Product.findById(productId);
         if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
-          await Product.findByIdAndUpdate(productId, {
-            retailPrice: product.originalRetailPrice,
+          const updateData = {
             hasActiveOffer: false,
             activeOfferId: null
-          });
+          };
+
+          // Restore retail price if it was discounted
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
+            updateData.retailPrice = product.originalRetailPrice;
+          }
+
+          // Restore wholesale price if it was discounted
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
+            updateData.wholesalePrice = product.originalWholesalePrice;
+          }
+
+          await Product.findByIdAndUpdate(productId, updateData);
+        }
+      }
+    }
+  }
+
+  // Handle priceTypes or discount changes - need to update product prices accordingly
+  if (req.body.priceTypes || req.body.discount !== undefined) {
+    const currentOffer = await Offer.findById(id);
+    if (currentOffer) {
+      const now = new Date();
+      const isCurrentlyActive = currentOffer.active && 
+                                now >= currentOffer.startDate && 
+                                now <= currentOffer.endDate;
+
+      // If offer is currently active, update prices for all products
+      if (isCurrentlyActive) {
+        const newPriceTypes = req.body.priceTypes || currentOffer.priceTypes;
+        const newDiscount = req.body.discount !== undefined ? req.body.discount : currentOffer.discount;
+        
+        for (const productId of currentOffer.products) {
+          const product = await Product.findById(productId);
+          if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
+            const updateData = {};
+
+            // Handle retail price
+            const shouldDiscountRetail = newPriceTypes.includes("retailPrice");
+            const wasDiscountingRetail = currentOffer.priceTypes.includes("retailPrice");
+            
+            if (shouldDiscountRetail && wasDiscountingRetail) {
+              // Still discounting retail, recalculate if discount changed
+              if (req.body.discount !== undefined && req.body.discount !== currentOffer.discount) {
+                const originalRetailPrice = product.originalRetailPrice || product.retailPrice;
+                updateData.retailPrice = originalRetailPrice * (1 - newDiscount / 100);
+              }
+            } else if (shouldDiscountRetail && !wasDiscountingRetail) {
+              // Newly discounting retail
+              const originalRetailPrice = product.retailPrice;
+              updateData.retailPrice = originalRetailPrice * (1 - newDiscount / 100);
+              updateData.originalRetailPrice = originalRetailPrice;
+            } else if (!shouldDiscountRetail && wasDiscountingRetail) {
+              // No longer discounting retail, restore original
+              if (product.originalRetailPrice) {
+                updateData.retailPrice = product.originalRetailPrice;
+              }
+            }
+
+            // Handle wholesale price
+            const shouldDiscountWholesale = newPriceTypes.includes("wholesalePrice");
+            const wasDiscountingWholesale = currentOffer.priceTypes.includes("wholesalePrice");
+            
+            if (shouldDiscountWholesale && wasDiscountingWholesale) {
+              // Still discounting wholesale, recalculate if discount changed
+              if (req.body.discount !== undefined && req.body.discount !== currentOffer.discount) {
+                const originalWholesalePrice = product.originalWholesalePrice || product.wholesalePrice;
+                updateData.wholesalePrice = originalWholesalePrice * (1 - newDiscount / 100);
+              }
+            } else if (shouldDiscountWholesale && !wasDiscountingWholesale) {
+              // Newly discounting wholesale
+              const originalWholesalePrice = product.wholesalePrice;
+              updateData.wholesalePrice = originalWholesalePrice * (1 - newDiscount / 100);
+              updateData.originalWholesalePrice = originalWholesalePrice;
+            } else if (!shouldDiscountWholesale && wasDiscountingWholesale) {
+              // No longer discounting wholesale, restore original
+              if (product.originalWholesalePrice) {
+                updateData.wholesalePrice = product.originalWholesalePrice;
+              }
+            }
+
+            if (Object.keys(updateData).length > 0) {
+              await Product.findByIdAndUpdate(productId, updateData);
+            }
+          }
         }
       }
     }

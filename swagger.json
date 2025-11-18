@@ -912,18 +912,51 @@
           {
             "name": "page",
             "in": "query",
-            "schema": { "type": "integer", "default": 1 }
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number for pagination"
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "default": 10 }
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Number of products per page"
           },
-          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "-createdAt",
+              "enum": [
+                "-createdAt",
+                "createdAt",
+                "name",
+                "-name",
+                "minWholesalePrice",
+                "maxWholesalePrice",
+                "minRetailPrice",
+                "maxRetailPrice"
+              ]
+            },
+            "description": "Sort field and direction. Use 'minWholesalePrice' or 'maxWholesalePrice' to sort by wholesale price (ascending/descending). Use 'minRetailPrice' or 'maxRetailPrice' to sort by retail price (ascending/descending). Prefix any field with '-' for descending order."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by category ID"
+          },
           {
             "name": "subCategory",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "description": "Filter by subcategory ID"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Search products by name (case-insensitive)"
           },
           {
             "name": "Authorization",
@@ -1261,6 +1294,16 @@
             "type": "boolean",
             "default": true,
             "description": "Whether the offer is active"
+          },
+          "priceTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["wholesalePrice", "retailPrice"]
+            },
+            "default": ["retailPrice"],
+            "minItems": 1,
+            "description": "Array of price types to apply discount to. Can include 'wholesalePrice', 'retailPrice', or both. At least one must be selected."
           }
         }
       },
@@ -1303,6 +1346,14 @@
           "active": {
             "type": "boolean",
             "description": "Whether the offer is active"
+          },
+          "priceTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["wholesalePrice", "retailPrice"]
+            },
+            "description": "Array of price types to apply discount to. Can include 'wholesalePrice', 'retailPrice', or both."
           }
         }
       },
@@ -1338,6 +1389,14 @@
           "active": { 
             "type": "boolean",
             "description": "Whether the offer is active and discounts are applied"
+          },
+          "priceTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["wholesalePrice", "retailPrice"]
+            },
+            "description": "Array of price types that the discount applies to. Can include 'wholesalePrice', 'retailPrice', or both."
           },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }

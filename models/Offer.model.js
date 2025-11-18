@@ -39,6 +39,17 @@ const offerSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    priceTypes: {
+      type: [String],
+      enum: ["wholesalePrice", "retailPrice"],
+      default: ["retailPrice"],
+      validate: {
+        validator: function(v) {
+          return v && v.length > 0;
+        },
+        message: "At least one price type must be selected"
+      }
+    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -57,6 +68,10 @@ offerSchema.pre("save", function (next) {
   if (this.endDate <= this.startDate) {
     return next(new Error("End date must be after start date"));
   }
+  // Ensure priceTypes has at least one value
+  if (!this.priceTypes || this.priceTypes.length === 0) {
+    this.priceTypes = ["retailPrice"];
+  }
   next();
 });
 
@@ -71,18 +86,35 @@ offerSchema.post("save", async function () {
       for (const productId of this.products) {
         const product = await Product.findById(productId);
         if (product) {
-          const originalRetailPrice = product.hasActiveOffer
-            ? product.originalRetailPrice
-            : product.retailPrice;
-
           const updateData = {
-            retailPrice: originalRetailPrice * (1 - this.discount / 100),
             hasActiveOffer: true,
             activeOfferId: this._id
           };
 
-          if (!product.hasActiveOffer) {
-            updateData.originalRetailPrice = originalRetailPrice;
+          // Apply discount to retail price if selected
+          if (this.priceTypes.includes("retailPrice")) {
+            const originalRetailPrice = product.hasActiveOffer
+              ? product.originalRetailPrice
+              : product.retailPrice;
+
+            updateData.retailPrice = originalRetailPrice * (1 - this.discount / 100);
+
+            if (!product.hasActiveOffer) {
+              updateData.originalRetailPrice = originalRetailPrice;
+            }
+          }
+
+          // Apply discount to wholesale price if selected
+          if (this.priceTypes.includes("wholesalePrice")) {
+            const originalWholesalePrice = product.hasActiveOffer
+              ? (product.originalWholesalePrice || product.wholesalePrice)
+              : product.wholesalePrice;
+
+            updateData.wholesalePrice = originalWholesalePrice * (1 - this.discount / 100);
+
+            if (!product.hasActiveOffer) {
+              updateData.originalWholesalePrice = originalWholesalePrice;
+            }
           }
 
           await Product.findByIdAndUpdate(productId, updateData);
@@ -100,11 +132,22 @@ offerSchema.post("findOneAndDelete", async function (doc) {
     for (const productId of doc.products) {
       const product = await Product.findById(productId);
       if (product && product.hasActiveOffer && product.activeOfferId.equals(doc._id)) {
-        await Product.findByIdAndUpdate(productId, {
-          retailPrice: product.originalRetailPrice,
+        const updateData = {
           hasActiveOffer: false,
           activeOfferId: null
-        });
+        };
+
+        // Restore retail price if it was discounted
+        if (doc.priceTypes && doc.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
+          updateData.retailPrice = product.originalRetailPrice;
+        }
+
+        // Restore wholesale price if it was discounted
+        if (doc.priceTypes && doc.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
+          updateData.wholesalePrice = product.originalWholesalePrice;
+        }
+
+        await Product.findByIdAndUpdate(productId, updateData);
       }
     }
   }

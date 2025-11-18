@@ -26,7 +26,7 @@ const processExpiredOffers = async () => {
 
       console.log(`Deactivated expired offer: ${offer._id} - ${offer.title}`);
 
-      // Restore original retail prices for all products in this offer
+      // Restore original prices for all products in this offer
       const productsToUpdate = await Product.find({
         _id: { $in: offer.products },
         hasActiveOffer: true,
@@ -34,12 +34,27 @@ const processExpiredOffers = async () => {
       });
 
       for (const product of productsToUpdate) {
-        product.retailPrice = product.originalRetailPrice;
-        product.hasActiveOffer = false;
-        product.activeOfferId = null;
-        await product.save();
+        const updateData = {
+          hasActiveOffer: false,
+          activeOfferId: null
+        };
 
-        console.log(`Restored original retail price for product: ${product._id} - ${product.name}`);
+        // Restore retail price if it was discounted
+        if (offer.priceTypes && offer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
+          updateData.retailPrice = product.originalRetailPrice;
+        }
+
+        // Restore wholesale price if it was discounted
+        if (offer.priceTypes && offer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
+          updateData.wholesalePrice = product.originalWholesalePrice;
+        }
+
+        await Product.findByIdAndUpdate(product._id, updateData);
+
+        const priceTypesRestored = [];
+        if (updateData.retailPrice) priceTypesRestored.push("retail");
+        if (updateData.wholesalePrice) priceTypesRestored.push("wholesale");
+        console.log(`Restored original ${priceTypesRestored.join(" and ")} price(s) for product: ${product._id} - ${product.name}`);
       }
     }
 

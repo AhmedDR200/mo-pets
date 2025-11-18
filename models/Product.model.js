@@ -23,6 +23,12 @@ const productSchema = new mongoose.Schema(
         return this.retailPrice;
       }
     },
+    originalWholesalePrice: {
+      type: Number,
+      default: function() {
+        return this.wholesalePrice;
+      }
+    },
     hasActiveOffer: {
       type: Boolean,
       default: false

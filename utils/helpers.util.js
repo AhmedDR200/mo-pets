@@ -10,6 +10,18 @@
 exports.parsePagination = (query) => {
   const page = Math.max(parseInt(query.page) || 1, 1);
   const limit = Math.max(parseInt(query.limit) || 10, 1);
-  const sort = query.sort || "-createdAt";
+
+  // Map sort options for price sorting
+  const sortMap = {
+    minWholesalePrice: "wholesalePrice",
+    maxWholesalePrice: "-wholesalePrice",
+    minRetailPrice: "retailPrice",
+    maxRetailPrice: "-retailPrice",
+  };
+
+  // Use mapped sort if provided, otherwise use the sort directly or default
+  const sortQuery = query.sort || "-createdAt";
+  const sort = sortMap[sortQuery] || sortQuery;
+
   return { page, limit, sort, skip: (page - 1) * limit };
 };
