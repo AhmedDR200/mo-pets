@@ -40,14 +40,23 @@ const processExpiredOffers = async () => {
         };
 
         // Restore retail price if it was discounted
-        if (offer.priceTypes && offer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
-          updateData.retailPrice = product.originalRetailPrice;
+        if (offer.priceTypes && offer.priceTypes.includes("retailPrice")) {
+          if (product.originalRetailPrice) {
+            updateData.retailPrice = product.originalRetailPrice;
+          } else {
+            console.warn(`Cannot restore retail price for product ${product._id}: originalRetailPrice is missing`);
+          }
         }
 
         // Restore wholesale price if it was discounted
-        if (offer.priceTypes && offer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
-          updateData.wholesalePrice = product.originalWholesalePrice;
+        if (offer.priceTypes && offer.priceTypes.includes("wholesalePrice")) {
+          if (product.originalWholesalePrice) {
+            updateData.wholesalePrice = product.originalWholesalePrice;
+          } else {
+            console.warn(`Cannot restore wholesale price for product ${product._id}: originalWholesalePrice is missing`);
+          }
         }
+
 
         await Product.findByIdAndUpdate(product._id, updateData);
 

@@ -285,11 +285,19 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
     }
   }
 
+  // Update original prices when base prices change and there's no active offer
   if (
     Object.prototype.hasOwnProperty.call(updatePayload, "retailPrice") &&
     !current.hasActiveOffer
   ) {
     updatePayload.originalRetailPrice = updatePayload.retailPrice;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(updatePayload, "wholesalePrice") &&
+    !current.hasActiveOffer
+  ) {
+    updatePayload.originalWholesalePrice = updatePayload.wholesalePrice;
   }
 
   const data = await Product.findByIdAndUpdate(id, updatePayload, {

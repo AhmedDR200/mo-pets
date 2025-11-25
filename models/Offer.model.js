@@ -44,7 +44,7 @@ const offerSchema = new mongoose.Schema(
       enum: ["wholesalePrice", "retailPrice"],
       default: ["retailPrice"],
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return v && v.length > 0;
         },
         message: "At least one price type must be selected"
@@ -64,7 +64,7 @@ offerSchema.pre(/^find/, function (next) {
 });
 
 // Middleware to validate that endDate is after startDate
-offerSchema.pre("save", function (next) {
+offerSchema.pre("save", async function (next) {
   if (this.endDate <= this.startDate) {
     return next(new Error("End date must be after start date"));
   }
@@ -72,6 +72,37 @@ offerSchema.pre("save", function (next) {
   if (!this.priceTypes || this.priceTypes.length === 0) {
     this.priceTypes = ["retailPrice"];
   }
+
+  // Validate that the discount will result in lower prices
+  if (this.discount && this.products && this.products.length > 0) {
+    const Product = mongoose.model("Product");
+
+    for (const productId of this.products) {
+      const product = await Product.findById(productId);
+      if (product) {
+        // Check retail price if it's being discounted
+        if (this.priceTypes.includes("retailPrice")) {
+          const originalRetailPrice = product.originalRetailPrice || product.retailPrice;
+          const discountedRetailPrice = originalRetailPrice * (1 - this.discount / 100);
+
+          if (discountedRetailPrice >= originalRetailPrice) {
+            return next(new Error(`Offer price must be lower than original retail price for product: ${product.name}`));
+          }
+        }
+
+        // Check wholesale price if it's being discounted
+        if (this.priceTypes.includes("wholesalePrice")) {
+          const originalWholesalePrice = product.originalWholesalePrice || product.wholesalePrice;
+          const discountedWholesalePrice = originalWholesalePrice * (1 - this.discount / 100);
+
+          if (discountedWholesalePrice >= originalWholesalePrice) {
+            return next(new Error(`Offer price must be lower than original wholesale price for product: ${product.name}`));
+          }
+        }
+      }
+    }
+  }
+
   next();
 });
 
@@ -106,9 +137,16 @@ offerSchema.post("save", async function () {
 
           // Apply discount to wholesale price if selected
           if (this.priceTypes.includes("wholesalePrice")) {
+            // Use originalWholesalePrice if exists, otherwise use current wholesalePrice
+            // This handles both new discounts and re-applying after product already has an offer
             const originalWholesalePrice = product.hasActiveOffer
               ? (product.originalWholesalePrice || product.wholesalePrice)
               : product.wholesalePrice;
+
+            // Log warning if originalWholesalePrice is missing for a product with active offer
+            if (product.hasActiveOffer && !product.originalWholesalePrice) {
+              console.warn(`Product ${product._id} has active offer but missing originalWholesalePrice. Using current wholesalePrice as fallback.`);
+            }
 
             updateData.wholesalePrice = originalWholesalePrice * (1 - this.discount / 100);
 
@@ -116,6 +154,7 @@ offerSchema.post("save", async function () {
               updateData.originalWholesalePrice = originalWholesalePrice;
             }
           }
+
 
           await Product.findByIdAndUpdate(productId, updateData);
         }
@@ -143,9 +182,14 @@ offerSchema.post("findOneAndDelete", async function (doc) {
         }
 
         // Restore wholesale price if it was discounted
-        if (doc.priceTypes && doc.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
-          updateData.wholesalePrice = product.originalWholesalePrice;
+        if (doc.priceTypes && doc.priceTypes.includes("wholesalePrice")) {
+          if (product.originalWholesalePrice) {
+            updateData.wholesalePrice = product.originalWholesalePrice;
+          } else {
+            console.warn(`Cannot restore wholesale price for product ${product._id}: originalWholesalePrice is missing`);
+          }
         }
+
 
         await Product.findByIdAndUpdate(productId, updateData);
       }

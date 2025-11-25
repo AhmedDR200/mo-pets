@@ -19,13 +19,13 @@ const productSchema = new mongoose.Schema(
     },
     originalRetailPrice: {
       type: Number,
-      default: function() {
+      default: function () {
         return this.retailPrice;
       }
     },
     originalWholesalePrice: {
       type: Number,
-      default: function() {
+      default: function () {
         return this.wholesalePrice;
       }
     },
@@ -58,6 +58,20 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false },
 );
+
+// Middleware to ensure original prices are set on product creation
+productSchema.pre("save", function (next) {
+  // Only set original prices if they're not already set (first time save)
+  if (this.isNew) {
+    if (!this.originalRetailPrice) {
+      this.originalRetailPrice = this.retailPrice;
+    }
+    if (!this.originalWholesalePrice) {
+      this.originalWholesalePrice = this.wholesalePrice;
+    }
+  }
+  next();
+});
 
 productSchema.index({ name: 1, category: 1, subCategory: 1 }, { unique: true });
 productSchema.index({ category: 1 });

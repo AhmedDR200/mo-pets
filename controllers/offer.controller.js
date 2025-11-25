@@ -175,13 +175,21 @@ const updateOffer = asyncHandler(async (req, res, next) => {
           };
 
           // Restore retail price if it was discounted
-          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
-            updateData.retailPrice = product.originalRetailPrice;
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice")) {
+            if (product.originalRetailPrice) {
+              updateData.retailPrice = product.originalRetailPrice;
+            } else {
+              console.warn(`Cannot restore retail price for product ${product._id}: originalRetailPrice is missing`);
+            }
           }
 
           // Restore wholesale price if it was discounted
-          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
-            updateData.wholesalePrice = product.originalWholesalePrice;
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice")) {
+            if (product.originalWholesalePrice) {
+              updateData.wholesalePrice = product.originalWholesalePrice;
+            } else {
+              console.warn(`Cannot restore wholesale price for product ${product._id}: originalWholesalePrice is missing`);
+            }
           }
 
           await Product.findByIdAndUpdate(productId, updateData);
@@ -228,13 +236,21 @@ const updateOffer = asyncHandler(async (req, res, next) => {
           };
 
           // Restore retail price if it was discounted
-          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice") && product.originalRetailPrice) {
-            updateData.retailPrice = product.originalRetailPrice;
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("retailPrice")) {
+            if (product.originalRetailPrice) {
+              updateData.retailPrice = product.originalRetailPrice;
+            } else {
+              console.warn(`Cannot restore retail price for product ${product._id}: originalRetailPrice is missing`);
+            }
           }
 
           // Restore wholesale price if it was discounted
-          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice") && product.originalWholesalePrice) {
-            updateData.wholesalePrice = product.originalWholesalePrice;
+          if (currentOffer.priceTypes && currentOffer.priceTypes.includes("wholesalePrice")) {
+            if (product.originalWholesalePrice) {
+              updateData.wholesalePrice = product.originalWholesalePrice;
+            } else {
+              console.warn(`Cannot restore wholesale price for product ${product._id}: originalWholesalePrice is missing`);
+            }
           }
 
           await Product.findByIdAndUpdate(productId, updateData);
@@ -248,15 +264,15 @@ const updateOffer = asyncHandler(async (req, res, next) => {
     const currentOffer = await Offer.findById(id);
     if (currentOffer) {
       const now = new Date();
-      const isCurrentlyActive = currentOffer.active && 
-                                now >= currentOffer.startDate && 
-                                now <= currentOffer.endDate;
+      const isCurrentlyActive = currentOffer.active &&
+        now >= currentOffer.startDate &&
+        now <= currentOffer.endDate;
 
       // If offer is currently active, update prices for all products
       if (isCurrentlyActive) {
         const newPriceTypes = req.body.priceTypes || currentOffer.priceTypes;
         const newDiscount = req.body.discount !== undefined ? req.body.discount : currentOffer.discount;
-        
+
         for (const productId of currentOffer.products) {
           const product = await Product.findById(productId);
           if (product && product.hasActiveOffer && product.activeOfferId.equals(id)) {
@@ -265,7 +281,7 @@ const updateOffer = asyncHandler(async (req, res, next) => {
             // Handle retail price
             const shouldDiscountRetail = newPriceTypes.includes("retailPrice");
             const wasDiscountingRetail = currentOffer.priceTypes.includes("retailPrice");
-            
+
             if (shouldDiscountRetail && wasDiscountingRetail) {
               // Still discounting retail, recalculate if discount changed
               if (req.body.discount !== undefined && req.body.discount !== currentOffer.discount) {
@@ -287,7 +303,7 @@ const updateOffer = asyncHandler(async (req, res, next) => {
             // Handle wholesale price
             const shouldDiscountWholesale = newPriceTypes.includes("wholesalePrice");
             const wasDiscountingWholesale = currentOffer.priceTypes.includes("wholesalePrice");
-            
+
             if (shouldDiscountWholesale && wasDiscountingWholesale) {
               // Still discounting wholesale, recalculate if discount changed
               if (req.body.discount !== undefined && req.body.discount !== currentOffer.discount) {
@@ -303,6 +319,8 @@ const updateOffer = asyncHandler(async (req, res, next) => {
               // No longer discounting wholesale, restore original
               if (product.originalWholesalePrice) {
                 updateData.wholesalePrice = product.originalWholesalePrice;
+              } else {
+                console.warn(`Cannot restore wholesale price for product ${product._id}: originalWholesalePrice is missing`);
               }
             }
 
