@@ -275,7 +275,7 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
       ? Number(updatePayload.retailPrice)
       : Number(current.retailPrice);
 
-    if (nextRetailPrice >= nextWholesalePrice) {
+    if (nextRetailPrice <= nextWholesalePrice) {
       return next(
         new ApiError(
           "retailPrice must be greater than wholesalePrice",
