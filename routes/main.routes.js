@@ -9,6 +9,8 @@ const offerRoutes = require("./offer.routes");
 const sliderRoutes = require("./slider.routes");
 const searchRoutes = require("./search.routes");
 const accessRoutes = require("./access.routes");
+const scraperRoutes = require("./scraper.routes");
+const orderRoutes = require("./order.routes");
 
 const mountRoutes = (app) => {
   // Mount routes
@@ -19,6 +21,8 @@ const mountRoutes = (app) => {
   app.use("/api/sliders", sliderRoutes);
   app.use("/api/search", searchRoutes);
   app.use("/api/access", accessRoutes);
+  app.use("/api/scraper", scraperRoutes);
+  app.use("/api/orders", orderRoutes);
 
   // Health check route
   app.get("/api/health", async (req, res) => {

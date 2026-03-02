@@ -2,11 +2,10 @@ const mongoose = require("mongoose");
 
 const wholesaleAccessTokenSchema = new mongoose.Schema(
     {
-        email: {
+        phone: {
             type: String,
-            required: [true, "Requesting email is required"],
+            required: [true, "Phone number is required"],
             trim: true,
-            lowercase: true,
         },
         otpHash: {
             type: String,

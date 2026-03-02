@@ -33,7 +33,6 @@ module.exports = (req, res, next) => {
       throw new Error("Unexpected token type");
     }
     req.wholesaleAccessGranted = true;
-    req.wholesaleAccessEmail = payload.email;
     return next();
   } catch (error) {
     return next(
