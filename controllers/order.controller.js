@@ -95,6 +95,19 @@ exports.getOrderById = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.deleteOrder = asyncHandler(async (req, res, next) => {
+  const order = await Order.findByIdAndDelete(req.params.id);
+
+  if (!order) {
+    return next(new ApiError("Order not found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Order deleted successfully",
+  });
+});
+
 exports.updateOrderStatus = asyncHandler(async (req, res, next) => {
   const { status } = req.body;
 
